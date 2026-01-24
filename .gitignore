@@ -1,0 +1,93 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+.env*.local
+.env.production
+.env.development
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+bun-debug.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.settings/
+.loadpath
+*.iml
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Drizzle
+drizzle/
+*.db.sql
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# Lock files (keep only one)
+package-lock.json
+yarn.lock
+# pnpm-lock.yaml (keep this if using pnpm)
+
+# TypeScript
+*.tsbuildinfo
+.tsbuildinfo
+
+# Bun
+.bun/
+bun.lockb
+
+# Misc
+.turbo/
+.vercel/
+.eslintcache
+.stylelintcache

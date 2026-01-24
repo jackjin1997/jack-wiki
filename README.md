@@ -23,7 +23,39 @@
 
 ## 快速开始
 
-### 前置要求
+> 💡 **推荐方式**：项目已配置一键启动脚本，可直接在根目录运行！
+
+### 方式 1：一键启动（最简单）
+
+```bash
+# 首次使用（自动安装依赖、启动数据库、初始化数据）
+./setup.sh
+
+# 之后每次启动（同时启动前后端）
+./dev.sh
+```
+
+### 方式 2：npm scripts
+
+```bash
+npm run setup    # 首次
+npm run dev      # 启动
+```
+
+### 方式 3：Makefile
+
+```bash
+make setup       # 首次
+make dev         # 启动
+```
+
+---
+
+### 方式 4：手动启动
+
+如果你想分步骤手动控制，可以按以下方式：
+
+#### 前置要求
 
 1. **安装Bun** (推荐，用于后端高性能运行):
 ```bash
@@ -41,7 +73,7 @@ npm install -g pnpm
 docker-compose up -d
 ```
 
-### 后端开发
+#### 后端开发
 
 ```bash
 cd jack-wiki-backend
@@ -61,7 +93,7 @@ bun run db:seed
 bun run dev  # 运行在 http://localhost:8000
 ```
 
-### 前端开发
+#### 前端开发
 
 ```bash
 cd jack-wiki-frontend

@@ -1,0 +1,21 @@
+{
+  "name": "jack-wiki",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jack Wiki - AI Knowledge Base",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd jack-wiki-backend && bun run dev",
+    "dev:frontend": "cd jack-wiki-frontend && bun run dev",
+    "dev:db": "docker-compose up -d",
+    "dev:all": "npm run dev:db && sleep 10 && npm run dev",
+    "install:all": "cd jack-wiki-backend && bun install && cd ../jack-wiki-frontend && bun install",
+    "db:init": "cd jack-wiki-backend && bun run db:push && bun run db:seed",
+    "db:reset": "docker-compose down -v && docker-compose up -d && sleep 10 && npm run db:init",
+    "setup": "npm run install:all && npm run dev:db && sleep 10 && npm run db:init",
+    "clean": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
