@@ -31,11 +31,23 @@ else
     echo "${GREEN}✓ Databases already running${NC}"
 fi
 
+# Detect package manager
+if command -v bun &> /dev/null; then
+    PKG_MANAGER="bun"
+    echo "${GREEN}✓ Using Bun${NC}"
+elif command -v pnpm &> /dev/null; then
+    PKG_MANAGER="pnpm"
+    echo "${YELLOW}⚠ Bun not found, using pnpm${NC}"
+else
+    echo "${RED}❌ Neither Bun nor pnpm found. Please install one of them.${NC}"
+    exit 1
+fi
+
 # Check if backend dependencies are installed
 if [ ! -d "jack-wiki-backend/node_modules" ]; then
     echo "${YELLOW}📦 Installing backend dependencies...${NC}"
     cd jack-wiki-backend
-    bun install
+    $PKG_MANAGER install
     cd ..
 fi
 
@@ -43,7 +55,7 @@ fi
 if [ ! -d "jack-wiki-frontend/node_modules" ]; then
     echo "${YELLOW}📦 Installing frontend dependencies...${NC}"
     cd jack-wiki-frontend
-    bun install
+    $PKG_MANAGER install
     cd ..
 fi
 
@@ -79,7 +91,7 @@ trap cleanup EXIT
 
 # Start backend in background
 cd jack-wiki-backend
-bun run dev &
+$PKG_MANAGER run dev &
 BACKEND_PID=$!
 
 # Wait a bit for backend to start
@@ -87,7 +99,7 @@ sleep 3
 
 # Start frontend
 cd ../jack-wiki-frontend
-bun run dev &
+$PKG_MANAGER run dev &
 FRONTEND_PID=$!
 
 # Wait for both processes

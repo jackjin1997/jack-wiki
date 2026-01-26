@@ -5,8 +5,8 @@
   "description": "Jack Wiki - AI Knowledge Base",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd jack-wiki-backend && bun run dev",
-    "dev:frontend": "cd jack-wiki-frontend && bun run dev",
+    "dev:backend": "cd jack-wiki-backend && (bun run dev || pnpm dev)",
+    "dev:frontend": "cd jack-wiki-frontend && (bun run dev || pnpm dev)",
     "dev:db": "docker-compose up -d",
     "dev:all": "npm run dev:db && sleep 10 && npm run dev",
     "install:all": "cd jack-wiki-backend && bun install && cd ../jack-wiki-frontend && bun install",

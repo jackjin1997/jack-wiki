@@ -43,22 +43,34 @@ docker-compose up -d
 echo "⏳ Waiting for databases to be ready..."
 sleep 15
 
+# Detect package manager
+if command -v bun &> /dev/null; then
+    PKG_MANAGER="bun"
+    echo "${GREEN}✓ Using Bun${NC}"
+elif command -v pnpm &> /dev/null; then
+    PKG_MANAGER="pnpm"
+    echo "${YELLOW}⚠ Bun not found, using pnpm${NC}"
+else
+    echo "${RED}❌ Neither Bun nor pnpm found. Please install one of them.${NC}"
+    exit 1
+fi
+
 # Install backend dependencies
 echo "${BLUE}📦 Installing backend dependencies...${NC}"
 cd jack-wiki-backend
-bun install
+$PKG_MANAGER install
 
 # Initialize database
 echo "${BLUE}🗄️  Initializing database...${NC}"
-bun run db:push
-bun run db:seed
+$PKG_MANAGER run db:push
+$PKG_MANAGER run db:seed
 
 cd ..
 
 # Install frontend dependencies
 echo "${BLUE}📦 Installing frontend dependencies...${NC}"
 cd jack-wiki-frontend
-bun install
+$PKG_MANAGER install
 
 cd ..
 

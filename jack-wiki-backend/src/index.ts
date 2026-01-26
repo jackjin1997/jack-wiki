@@ -1,55 +1,27 @@
-import { Elysia } from 'elysia'
-import { trpc } from '@elysiajs/trpc'
-import { cors } from '@elysiajs/cors'
+import { createHTTPServer } from '@trpc/server/adapters/standalone'
+import cors from 'cors'
 import { appRouter } from './presentation/trpc/app.router'
 import { createContext } from './presentation/trpc/context'
 import { logger } from './shared/utils/logger'
 import { env } from './shared/utils/env'
 
-const app = new Elysia()
-  // CORS configuration
-  .use(
-    cors({
-      origin: env.ALLOWED_ORIGINS.split(','),
-      credentials: true,
-    })
-  )
-  // Health check endpoint
-  .get('/health', () => ({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: env.NODE_ENV,
-  }))
-  // tRPC integration
-  .use(
-    trpc(appRouter, {
-      endpoint: '/trpc',
-      createContext,
-    })
-  )
-  // Global error handler
-  .onError(({ code, error, set }) => {
-    logger.error({ code, error: error.message, stack: error.stack }, 'Application error')
+// Create tRPC HTTP server with CORS
+const server = createHTTPServer({
+  middleware: cors({
+    origin: env.ALLOWED_ORIGINS.split(','),
+    credentials: true,
+  }),
+  router: appRouter,
+  createContext,
+})
 
-    if (code === 'VALIDATION') {
-      set.status = 400
-      return { success: false, error: 'Validation error', details: error.message }
-    }
+const port = Number(env.PORT)
 
-    if (code === 'NOT_FOUND') {
-      set.status = 404
-      return { success: false, error: 'Not found' }
-    }
-
-    set.status = 500
-    return { success: false, error: 'Internal server error' }
-  })
-  // Start server
-  .listen(Number(env.PORT))
+server.listen(port)
 
 logger.info(
   {
-    port: env.PORT,
+    port,
     environment: env.NODE_ENV,
     tRPCEndpoint: `/trpc`,
   },
@@ -57,7 +29,7 @@ logger.info(
 )
 
 logger.info('📝 Available routes:')
-logger.info('  - GET  /health - Health check')
 logger.info('  - POST /trpc - tRPC endpoint')
+logger.info(`  - Server running at http://localhost:${port}`)
 
-export type App = typeof app
+export { appRouter }
