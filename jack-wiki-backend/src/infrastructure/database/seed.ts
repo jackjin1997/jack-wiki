@@ -281,31 +281,35 @@ const personasData = [
 
 async function seed() {
   try {
-    logger.info('Starting database seeding...')
+    console.log('🌱 Starting database seeding...')
 
     // Clear existing personas
     await db.delete(personas)
-    logger.info('Cleared existing personas')
+    console.log('✓ Cleared existing personas')
 
     // Insert new personas
     const inserted = await db.insert(personas).values(personasData).returning()
-    logger.info(`Inserted ${inserted.length} personas`)
+    console.log(`✓ Inserted ${inserted.length} personas:`)
+    inserted.forEach(p => console.log(`  - ${p.name} (${p.category})`))
 
-    logger.info('Database seeding completed successfully!')
+    console.log('\n✅ Database seeding completed successfully!')
   } catch (error) {
-    logger.error('Error seeding database:', error)
+    console.error('❌ Error seeding database:', error)
     throw error
   }
 }
 
 // Run seed if called directly
-if (import.meta.main) {
-  seed()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error(error)
-      process.exit(1)
-    })
-}
+console.log('Starting seed script...')
+seed()
+  .then(() => {
+    console.log('Seed completed, exiting...')
+    process.exit(0)
+  })
+  .catch(error => {
+    console.error('Seed failed:', error)
+    console.error(error.stack)
+    process.exit(1)
+  })
 
 export { seed }
