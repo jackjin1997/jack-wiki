@@ -54,7 +54,7 @@ export const embeddings = pgTable('embeddings', {
   knowledgeItemId: uuid('knowledge_item_id')
     .references(() => knowledgeItems.id, { onDelete: 'cascade' })
     .notNull(),
-  embedding: vector('embedding', { dimensions: 1536 }), // OpenAI ada-002 dimensions
+  embedding: vector('embedding', { dimensions: 3072 }), // Google gemini-embedding-001 dimensions
   chunkText: text('chunk_text').notNull(), // The actual text chunk
   chunkIndex: text('chunk_index'), // Index within the document
   metadata: jsonb('metadata'),
