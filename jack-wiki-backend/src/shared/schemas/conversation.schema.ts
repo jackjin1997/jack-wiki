@@ -17,7 +17,13 @@ export const deleteConversationSchema = z.object({
   id: z.string().uuid(),
 })
 
+export const exportCXPSchema = z.object({
+  id: z.string().uuid(),
+  model: z.string().optional(),
+})
+
 export type CreateConversationInput = z.infer<typeof createConversationSchema>
 export type GetConversationInput = z.infer<typeof getConversationSchema>
 export type ListConversationsInput = z.infer<typeof listConversationsSchema>
 export type DeleteConversationInput = z.infer<typeof deleteConversationSchema>
+export type ExportCXPInput = z.infer<typeof exportCXPSchema>

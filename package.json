@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "Jack Wiki - AI Knowledge Base",
+  "workspaces": [
+    "jack-wiki-backend",
+    "jack-wiki-frontend",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd jack-wiki-backend && (bun run dev || pnpm dev)",

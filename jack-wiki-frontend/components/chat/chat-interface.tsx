@@ -7,6 +7,7 @@ import { MessageInput } from './message-input'
 import { ModelSelector } from './model-selector'
 import { PersonaSelector } from './persona-selector'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
 
 interface ChatInterfaceProps {
   conversationId: string | null
@@ -33,6 +34,26 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       void refetch()
     },
   })
+
+  const exportCXPMutation = trpc.conversation.exportCXP.useMutation({
+    onSuccess: (data) => {
+      // Download as JSON file
+      const blob = new Blob([JSON.stringify(data.cxp, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cxp-${conversationId}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    },
+  })
+
+  const handleExportCXP = () => {
+    if (!conversationId) return
+    exportCXPMutation.mutate({ id: conversationId, model: selectedModel })
+  }
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -67,9 +88,19 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header with selectors */}
-      <div className="flex items-center gap-4 border-b p-4">
-        <ModelSelector value={selectedModel} onChange={setSelectedModel} />
-        <PersonaSelector value={selectedPersona} onChange={setSelectedPersona} />
+      <div className="flex items-center justify-between border-b p-4">
+        <div className="flex items-center gap-4">
+          <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+          <PersonaSelector value={selectedPersona} onChange={setSelectedPersona} />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExportCXP}
+          disabled={exportCXPMutation.isPending || !messages?.length}
+        >
+          {exportCXPMutation.isPending ? 'Exporting...' : 'Export CXP'}
+        </Button>
       </div>
 
       {/* Messages area */}

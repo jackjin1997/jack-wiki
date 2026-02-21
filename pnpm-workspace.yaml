@@ -1,0 +1,4 @@
+packages:
+  - 'jack-wiki-backend'
+  - 'jack-wiki-frontend'
+  - 'packages/*'

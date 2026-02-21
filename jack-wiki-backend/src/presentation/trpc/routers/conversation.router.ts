@@ -1,11 +1,13 @@
 import { router, procedure } from '../procedures'
 import { CreateConversationUseCase } from '@/core/use-cases/conversation/create-conversation.use-case'
 import { ListConversationsUseCase } from '@/core/use-cases/conversation/list-conversations.use-case'
+import { GenerateCXPUseCase } from '@/core/use-cases/conversation/generate-cxp.use-case'
 import {
   createConversationSchema,
   listConversationsSchema,
   getConversationSchema,
   deleteConversationSchema,
+  exportCXPSchema,
 } from '@/shared/schemas/conversation.schema'
 import { NotFoundError } from '@/shared/errors/base.error'
 
@@ -31,5 +33,17 @@ export const conversationRouter = router({
   delete: procedure.input(deleteConversationSchema).mutation(async ({ input, ctx }) => {
     await ctx.conversationRepo.delete(input.id)
     return { success: true }
+  }),
+
+  exportCXP: procedure.input(exportCXPSchema).mutation(async ({ input, ctx }) => {
+    const useCase = new GenerateCXPUseCase(
+      ctx.conversationRepo,
+      ctx.messageRepo,
+      ctx.aiService
+    )
+    return await useCase.execute({
+      conversationId: input.id,
+      model: input.model,
+    })
   }),
 })

@@ -1,0 +1,37 @@
+{
+  "name": "cxp",
+  "version": "0.1.0",
+  "description": "CXP (Context eXchange Protocol) - A standard for structured context exchange between AI agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "cxp",
+    "context-exchange-protocol",
+    "ai",
+    "agent",
+    "context",
+    "protocol",
+    "a2a",
+    "mcp",
+    "llm"
+  ],
+  "author": "Jack Xu",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "zod": "^3.23.0"
+  }
+}
