@@ -13,7 +13,7 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
-  const [selectedModel, setSelectedModel] = useState('gemini-pro')
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
   const [selectedPersona, setSelectedPersona] = useState<string | undefined>()
   const scrollRef = useRef<HTMLDivElement>(null)
 
