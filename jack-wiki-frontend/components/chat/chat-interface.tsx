@@ -45,8 +45,13 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       const a = document.createElement('a')
       a.href = url
       a.download = `cxp-${conversationId}.json`
+      document.body.appendChild(a)
       a.click()
+      document.body.removeChild(a)
       URL.revokeObjectURL(url)
+    },
+    onError: (error) => {
+      alert(`Export CXP failed: ${error.message}`)
     },
   })
 
