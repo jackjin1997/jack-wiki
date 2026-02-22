@@ -3,7 +3,7 @@
 import { trpc } from '@/lib/trpc'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { PlusCircle, MessageSquare } from 'lucide-react'
+import { Plus, MessageSquare, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ConversationListProps {
@@ -12,61 +12,79 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ selectedId, onSelect }: ConversationListProps) {
-  const { data: conversations, isLoading } = trpc.conversation.list.useQuery({
+  const { data: conversations, isLoading, refetch } = trpc.conversation.list.useQuery({
     limit: 50,
     offset: 0,
   })
 
   const createMutation = trpc.conversation.create.useMutation({
     onSuccess: data => {
+      void refetch()
       onSelect(data.id)
     },
   })
 
-  const handleNewConversation = async () => {
-    createMutation.mutate({})
-  }
+  const deleteMutation = trpc.conversation.delete.useMutation({
+    onSuccess: () => { void refetch() },
+  })
 
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-muted-foreground">Loading...</div>
+        <div className="text-xs text-muted-foreground">加载中…</div>
       </div>
     )
   }
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="border-b p-4">
-        <Button onClick={handleNewConversation} className="w-full" size="sm">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          New Chat
+      <div className="p-3">
+        <Button
+          onClick={() => createMutation.mutate({})}
+          disabled={createMutation.isPending}
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 text-xs"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          新建对话
         </Button>
       </div>
 
-      {/* Conversation list */}
       <ScrollArea className="flex-1">
-        <div className="space-y-1 p-2">
+        <div className="space-y-0.5 px-2 pb-2">
           {conversations?.map(conv => (
-            <button
+            <div
               key={conv.id}
-              onClick={() => onSelect(conv.id)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-accent',
-                selectedId === conv.id && 'bg-accent'
+                'group flex items-center gap-2 rounded-lg px-2 py-2 transition-colors cursor-pointer',
+                selectedId === conv.id
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
               )}
+              onClick={() => onSelect(conv.id)}
             >
-              <MessageSquare className="h-4 w-4 shrink-0" />
-              <span className="truncate">{conv.title}</span>
-            </button>
+              <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+              <span className="flex-1 truncate text-xs">{conv.title}</span>
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  if (confirm('删除这个对话？')) {
+                    deleteMutation.mutate({ id: conv.id })
+                  }
+                }}
+                className="hidden shrink-0 rounded p-0.5 text-muted-foreground/40 hover:text-destructive group-hover:block"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
           ))}
 
           {(!conversations || conversations.length === 0) && (
-            <div className="px-3 py-8 text-center text-sm text-muted-foreground">
-              No conversations yet.
+            <div className="px-2 py-8 text-center text-xs text-muted-foreground">
+              还没有对话
               <br />
-              Create a new one to start!
+              点击上方新建
             </div>
           )}
         </div>

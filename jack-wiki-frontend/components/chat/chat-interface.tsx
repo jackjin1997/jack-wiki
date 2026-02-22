@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { trpc } from '@/lib/trpc'
 import { MessageList } from './message-list'
 import { MessageInput } from './message-input'
@@ -8,6 +8,7 @@ import { ModelSelector } from './model-selector'
 import { PersonaSelector } from './persona-selector'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
+import { Sparkles, FileJson } from 'lucide-react'
 
 interface ChatInterfaceProps {
   conversationId: string | null
@@ -19,28 +20,17 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const { data: messages, refetch } = trpc.message.list.useQuery(
-    {
-      conversationId: conversationId!,
-      limit: 50,
-      offset: 0,
-    },
-    {
-      enabled: !!conversationId,
-    }
+    { conversationId: conversationId!, limit: 50, offset: 0 },
+    { enabled: !!conversationId }
   )
 
   const sendMutation = trpc.message.send.useMutation({
-    onSuccess: () => {
-      void refetch()
-    },
+    onSuccess: () => { void refetch() },
   })
 
   const exportCXPMutation = trpc.conversation.exportCXP.useMutation({
     onSuccess: (data) => {
-      // Download as JSON file
-      const blob = new Blob([JSON.stringify(data.cxp, null, 2)], {
-        type: 'application/json',
-      })
+      const blob = new Blob([JSON.stringify(data.cxp, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -50,15 +40,8 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     },
-    onError: (error) => {
-      alert(`Export CXP failed: ${error.message}`)
-    },
+    onError: (error) => alert(`Export CXP failed: ${error.message}`),
   })
-
-  const handleExportCXP = () => {
-    if (!conversationId) return
-    exportCXPMutation.mutate({ id: conversationId, model: selectedModel })
-  }
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -68,11 +51,14 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
 
   if (!conversationId) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-8">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <Sparkles className="h-7 w-7" />
+        </div>
         <div className="text-center">
-          <h2 className="text-2xl font-semibold">Welcome to Jack Wiki</h2>
-          <p className="mt-2 text-muted-foreground">
-            Select a conversation or create a new one to start chatting
+          <h2 className="text-xl font-semibold tracking-tight">Jack Wiki</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            从左侧选择或新建对话开始
           </p>
         </div>
       </div>
@@ -81,7 +67,6 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
 
   const handleSend = async (message: string) => {
     if (!conversationId || !message.trim()) return
-
     await sendMutation.mutateAsync({
       conversationId,
       message,
@@ -92,29 +77,43 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header with selectors */}
-      <div className="flex items-center justify-between border-b p-4">
-        <div className="flex items-center gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b bg-card/50 px-4 py-2.5">
+        <div className="flex items-center gap-3">
           <ModelSelector value={selectedModel} onChange={setSelectedModel} />
           <PersonaSelector value={selectedPersona} onChange={setSelectedPersona} />
         </div>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={handleExportCXP}
+          onClick={() => exportCXPMutation.mutate({ id: conversationId, model: selectedModel })}
           disabled={exportCXPMutation.isPending || !messages?.length}
+          className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          {exportCXPMutation.isPending ? 'Exporting...' : 'Export CXP'}
+          <FileJson className="h-3.5 w-3.5" />
+          {exportCXPMutation.isPending ? '导出中…' : 'Export CXP'}
         </Button>
       </div>
 
-      {/* Messages area */}
+      {/* Messages */}
       <ScrollArea className="flex-1" ref={scrollRef}>
-        <MessageList messages={messages || []} />
+        <MessageList messages={messages ?? []} />
+        {sendMutation.isPending && (
+          <div className="flex items-center gap-3 px-4 pb-4">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex gap-1">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:0ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:150ms]" />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground/50 [animation-delay:300ms]" />
+            </div>
+          </div>
+        )}
       </ScrollArea>
 
-      {/* Input area */}
-      <div className="border-t p-4">
+      {/* Input */}
+      <div className="border-t bg-card/30 p-4">
         <MessageInput onSend={handleSend} isLoading={sendMutation.isPending} />
       </div>
     </div>
