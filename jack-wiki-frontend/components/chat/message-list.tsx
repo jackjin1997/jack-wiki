@@ -10,7 +10,7 @@ interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
   content: string
-  createdAt: Date
+  createdAt: Date | string
 }
 
 interface MessageListProps {

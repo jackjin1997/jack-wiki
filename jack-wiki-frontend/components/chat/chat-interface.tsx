@@ -15,9 +15,9 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
+  const [selectedModel, setSelectedModel] = useState<'claude-opus-4-6' | 'claude-sonnet-4-6' | 'gemini-3.1-pro' | 'gemini-3.0-pro' | 'gemini-2.5-flash' | 'gpt-4o' | 'o3-mini'>('gemini-2.5-flash')
   const [selectedPersona, setSelectedPersona] = useState<string | undefined>()
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: messages, refetch } = trpc.message.list.useQuery(
     { conversationId: conversationId!, limit: 50, offset: 0 },
@@ -44,9 +44,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   })
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   if (!conversationId) {
@@ -80,7 +78,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b bg-card/50 px-4 py-2.5">
         <div className="flex items-center gap-3">
-          <ModelSelector value={selectedModel} onChange={setSelectedModel} />
+          <ModelSelector value={selectedModel} onChange={v => setSelectedModel(v as typeof selectedModel)} />
           <PersonaSelector value={selectedPersona} onChange={setSelectedPersona} />
         </div>
         <Button
@@ -96,7 +94,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
+      <ScrollArea className="flex-1">
         <MessageList messages={messages ?? []} />
         {sendMutation.isPending && (
           <div className="flex items-center gap-3 px-4 pb-4">
@@ -110,6 +108,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
             </div>
           </div>
         )}
+        <div ref={bottomRef} />
       </ScrollArea>
 
       {/* Input */}
