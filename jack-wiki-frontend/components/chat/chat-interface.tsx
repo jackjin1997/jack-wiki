@@ -8,7 +8,8 @@ import { ModelSelector } from './model-selector'
 import { PersonaSelector } from './persona-selector'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Sparkles, FileJson } from 'lucide-react'
+import { Sparkles, FileJson, BookOpen } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface ChatInterfaceProps {
   conversationId: string | null
@@ -17,6 +18,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const [selectedModel, setSelectedModel] = useState<'claude-opus-4-6' | 'claude-sonnet-4-6' | 'gemini-3.1-pro' | 'gemini-3.0-pro' | 'gemini-2.5-flash' | 'gpt-4o' | 'o3-mini'>('gemini-2.5-flash')
   const [selectedPersona, setSelectedPersona] = useState<string | undefined>()
+  const [useRAG, setUseRAG] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const { data: messages, refetch } = trpc.message.list.useQuery(
@@ -70,6 +72,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
       message,
       model: selectedModel,
       personaId: selectedPersona,
+      useRAG,
     })
   }
 
@@ -80,6 +83,19 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
         <div className="flex items-center gap-3">
           <ModelSelector value={selectedModel} onChange={v => setSelectedModel(v as typeof selectedModel)} />
           <PersonaSelector value={selectedPersona} onChange={setSelectedPersona} />
+          <button
+            onClick={() => setUseRAG(v => !v)}
+            title={useRAG ? '关闭知识库增强' : '开启知识库增强'}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+              useRAG
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            )}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            Wiki RAG
+          </button>
         </div>
         <Button
           variant="ghost"

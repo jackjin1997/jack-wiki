@@ -16,6 +16,7 @@ export const sendMessageSchema = z.object({
     'o3-mini',
   ]),
   personaId: z.string().uuid().optional(),
+  useRAG: z.boolean().optional().default(false),
 })
 
 export const listMessagesSchema = z.object({

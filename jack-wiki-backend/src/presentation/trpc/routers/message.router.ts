@@ -5,7 +5,13 @@ import { observable } from '@trpc/server/observable'
 
 export const messageRouter = router({
   send: procedure.input(sendMessageSchema).mutation(async ({ input, ctx }) => {
-    const useCase = new SendMessageUseCase(ctx.messageRepo, ctx.personaRepo, ctx.aiService)
+    const useCase = new SendMessageUseCase(
+      ctx.messageRepo,
+      ctx.personaRepo,
+      ctx.aiService,
+      ctx.knowledgeRepo,
+      ctx.embeddingService,
+    )
     return await useCase.execute(input)
   }),
 
@@ -21,12 +27,30 @@ export const messageRouter = router({
             content: input.message,
           })
 
-          // Get persona if specified
+          // Get persona system prompt if specified
           let systemPrompt: string | undefined
           if (input.personaId) {
             const persona = await ctx.personaRepo.findById(input.personaId)
             if (persona) {
               systemPrompt = persona.systemPrompt
+            }
+          }
+
+          // RAG: retrieve relevant knowledge and inject into system prompt
+          if (input.useRAG) {
+            try {
+              const queryVector = await ctx.embeddingService.embedText(input.message)
+              const chunks = await ctx.knowledgeRepo.similaritySearch(queryVector, 3)
+              const relevant = chunks.filter(c => c.similarity >= 0.4)
+              if (relevant.length > 0) {
+                const contextText = relevant
+                  .map((c, i) => `[${i + 1}] ${c.chunkText}`)
+                  .join('\n\n')
+                const ragContext = `以下是与用户问题相关的知识库内容，请参考这些内容回答：\n\n${contextText}`
+                systemPrompt = systemPrompt ? `${systemPrompt}\n\n---\n${ragContext}` : ragContext
+              }
+            } catch {
+              // RAG failure is non-fatal; continue without context
             }
           }
 
