@@ -1,5 +1,8 @@
 import { db } from './client'
-import { personas } from './schema'
+import { personas, knowledgeItems, embeddings } from './schema'
+import { DrizzleKnowledgeRepository } from '../repositories/drizzle-knowledge.repository'
+import { EmbeddingService } from '../ai/embeddings/embedding.service'
+import { UploadKnowledgeUseCase } from '@/core/use-cases/knowledge/upload-knowledge.use-case'
 import { logger } from '@/shared/utils/logger'
 
 // AI Personas seed data
@@ -279,6 +282,30 @@ const personasData = [
   },
 ]
 
+// Knowledge seed data (used for RAG demos and testing)
+const knowledgeData = [
+  {
+    title: '亚里士多德论幸福',
+    content: '亚里士多德认为，幸福（eudaimonia）是人类最高善。幸福不是一种感觉，而是合乎完满德性的灵魂活动，并且贯穿一生。他强调实践智慧（phronesis）和中庸之道，认为真正的幸福来自于持续地、有目的地实践美德，而非短暂的享乐或财富积累。',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'Jack 的技术栈',
+    content: 'Jack 的个人项目 jack-wiki 使用以下技术栈：后端采用 Bun + Elysia + tRPC + Drizzle ORM + PostgreSQL (pgvector) + LangChain；前端使用 Next.js 15 App Router + shadcn/ui + Tailwind CSS + Zustand + tRPC Client。项目采用 pnpm monorepo 结构，后端运行在 8000 端口，前端运行在 3000 端口。AI 模型支持 Gemini Pro、Claude 3.5 Sonnet 和 GPT-4o。向量嵌入使用 Google gemini-embedding-001 模型，维度为 3072。',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'Jack 的 MVP 规划',
+    content: 'jack-wiki 的 MVP 路线图：MVP1（已完成）包括多模型对话、12个AI角色扮演、流式响应、对话历史记录和 CXP 导出功能。MVP2（当前）目标是文档上传与向量化、RAG 知识检索增强对话、知识库管理界面。MVP3 计划做个人展示页、简历集成和 AI 助手自我介绍。MVP4 计划支持多用户、认证系统和自定义配置。',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'RAG 原理简介',
+    content: 'RAG（Retrieval-Augmented Generation，检索增强生成）是一种将向量数据库与大语言模型结合的技术。工作流程：1）将文档切分成小段（chunk）并通过 embedding 模型转换成向量存入数据库；2）用户提问时，将问题也转换成向量，通过余弦相似度在数据库中找到最相关的片段；3）将检索到的片段作为上下文注入到 LLM 的 system prompt 中；4）LLM 基于这些上下文生成更准确、更有依据的回答。相比纯 LLM 对话，RAG 能显著减少幻觉，并能让模型回答训练数据之外的私有知识。',
+    sourceType: 'text' as const,
+  },
+]
+
 async function seed() {
   try {
     console.log('🌱 Starting database seeding...')
@@ -291,6 +318,22 @@ async function seed() {
     const inserted = await db.insert(personas).values(personasData).returning()
     console.log(`✓ Inserted ${inserted.length} personas:`)
     inserted.forEach(p => console.log(`  - ${p.name} (${p.category})`))
+
+    // Seed knowledge items with embeddings
+    console.log('\n📚 Seeding knowledge base...')
+    await db.delete(embeddings)
+    await db.delete(knowledgeItems)
+    console.log('✓ Cleared existing knowledge items')
+
+    const knowledgeRepo = new DrizzleKnowledgeRepository(db)
+    const embeddingService = new EmbeddingService()
+    const uploadUseCase = new UploadKnowledgeUseCase(knowledgeRepo, embeddingService)
+
+    for (const item of knowledgeData) {
+      await uploadUseCase.execute(item)
+      console.log(`  ✓ ${item.title}`)
+    }
+    console.log(`✓ Seeded ${knowledgeData.length} knowledge items with embeddings`)
 
     console.log('\n✅ Database seeding completed successfully!')
   } catch (error) {
