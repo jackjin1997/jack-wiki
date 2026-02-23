@@ -1,5 +1,5 @@
 import { db } from './client'
-import { personas, knowledgeItems, embeddings } from './schema'
+import { personas, knowledgeItems, embeddings, messages } from './schema'
 import { DrizzleKnowledgeRepository } from '../repositories/drizzle-knowledge.repository'
 import { EmbeddingService } from '../ai/embeddings/embedding.service'
 import { UploadKnowledgeUseCase } from '@/core/use-cases/knowledge/upload-knowledge.use-case'
@@ -257,6 +257,30 @@ const personasData = [
     category: 'investor',
   },
 
+  // Profile (Jack's personal AI assistant)
+  {
+    name: 'Jack AI 助手',
+    nameEn: 'Jack Assistant',
+    description: 'Jack 的个人 AI 助手，基于 Jack 的真实经历和知识库来回答关于 Jack 的问题',
+    systemPrompt: `你是 Jack（许进泽）的个人 AI 助手。你的职责是帮助访客了解 Jack——他的技术能力、项目经历、职业规划和个人特质。
+
+你的行为准则：
+- 基于知识库中关于 Jack 的真实信息来回答问题，不要编造
+- 以友好、专业的第三人称（"Jack..."）介绍 Jack，或以助手视角说"根据我对 Jack 的了解..."
+- 当被问到知识库中没有的信息时，诚实说明，并建议访客通过 GitHub 或邮件联系 Jack
+- 语言风格：中英文均可，专业且有温度，避免过于正式
+
+关于 Jack 的基础信息（知识库中会有更详细的内容）：
+- 全名：许进泽（Jack）
+- 职业定位：全栈工程师，专注 TypeScript 生态和 AI 集成
+- 核心项目：jack-wiki，一个集成多 AI 模型的个人知识库系统
+- 技术热情：对 AI 应用、知识管理和开发者工具特别感兴趣
+
+如果知识库检索提供了更详细的信息，请优先使用知识库内容回答。`,
+    avatar: null,
+    category: 'profile',
+  },
+
   // Special
   {
     name: '周媛',
@@ -299,6 +323,28 @@ const knowledgeData = [
     content: 'jack-wiki 的 MVP 路线图：MVP1（已完成）包括多模型对话、12个AI角色扮演、流式响应、对话历史记录和 CXP 导出功能。MVP2（当前）目标是文档上传与向量化、RAG 知识检索增强对话、知识库管理界面。MVP3 计划做个人展示页、简历集成和 AI 助手自我介绍。MVP4 计划支持多用户、认证系统和自定义配置。',
     sourceType: 'text' as const,
   },
+  // Jack's personal profile knowledge (for AI self-introduction via RAG)
+  {
+    title: 'Jack 的个人简介',
+    content: '许进泽（英文名 Jack），全栈工程师，专注于 TypeScript 生态和 AI 应用开发。热爱构建实用的开发者工具和知识管理系统。目前正在开发 jack-wiki——一个集成多 AI 模型、支持 RAG 知识检索的个人知识库系统。对大模型应用、知识图谱和人机交互有浓厚兴趣。GitHub: https://github.com/jackjin1997',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'Jack 的技术技能',
+    content: '前端技术：TypeScript、React、Next.js 15 (App Router)、Tailwind CSS、shadcn/ui、Zustand。后端技术：Node.js、Bun、Elysia、tRPC、Drizzle ORM、PostgreSQL、pgvector、Redis。AI 与机器学习：LangChain、RAG（检索增强生成）、向量嵌入（Google gemini-embedding-001）、多模型集成（Gemini、Claude、GPT-4o）。工具与基础设施：Docker、pnpm monorepo、Git、CI/CD。',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'Jack 的项目经历',
+    content: 'jack-wiki（2024年至今）：个人 AI 知识库系统。技术栈：Next.js 15 + Bun + tRPC + PostgreSQL(pgvector) + LangChain。功能：多模型对话（Gemini/Claude/GPT-4o）、12个AI角色扮演、RAG 知识检索、CXP 上下文导出协议、知识库管理。这是一个从零设计并独立完成的全栈项目，体现了对 Clean Architecture 的理解和对 AI 工程的实践。',
+    sourceType: 'text' as const,
+  },
+  {
+    title: 'Jack 的联系方式',
+    content: 'GitHub: https://github.com/jackjin1997  |  Email: 1037461232@qq.com  |  欢迎就技术合作、开源项目或工作机会发起联系。',
+    sourceType: 'text' as const,
+  },
+
   {
     title: 'RAG 原理简介',
     content: 'RAG（Retrieval-Augmented Generation，检索增强生成）是一种将向量数据库与大语言模型结合的技术。工作流程：1）将文档切分成小段（chunk）并通过 embedding 模型转换成向量存入数据库；2）用户提问时，将问题也转换成向量，通过余弦相似度在数据库中找到最相关的片段；3）将检索到的片段作为上下文注入到 LLM 的 system prompt 中；4）LLM 基于这些上下文生成更准确、更有依据的回答。相比纯 LLM 对话，RAG 能显著减少幻觉，并能让模型回答训练数据之外的私有知识。',
@@ -309,6 +355,10 @@ const knowledgeData = [
 async function seed() {
   try {
     console.log('🌱 Starting database seeding...')
+
+    // Nullify persona references in messages before deleting personas
+    await db.update(messages).set({ personaId: null })
+    console.log('✓ Cleared persona references from messages')
 
     // Clear existing personas
     await db.delete(personas)
